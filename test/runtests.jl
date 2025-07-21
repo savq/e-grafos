@@ -1,3 +1,4 @@
 include("./unionfind.jl")
 include("./egraph.jl")
 include("./match.jl")
+include("./rewrite.jl")

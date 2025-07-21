@@ -16,5 +16,6 @@ include("./egraph.jl")
 using .EgraphsCore: Egraph, Enode, add!, merge!, rebuild!
 
 include("./match.jl")
+include("./rewrite.jl")
 
 end # module Egraphs
