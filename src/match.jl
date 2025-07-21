@@ -23,8 +23,7 @@ end
 # Return a channel that yields valid substitutions
 function search(eg::Egraph, node::Enode, pat::Pattern)
     Channel() do c
-        subst = Substitution()
-        if match(eg, node, pat, subst)
+        for subst in match(eg, node, pat, Substitution())
             put!(c, subst)
         end
 
@@ -37,46 +36,51 @@ function search(eg::Egraph, node::Enode, pat::Pattern)
     end
 end
 
-function match(eg::Egraph, id::EclassId, pat::Pattern, subst)
-    matched = false
-    nodes = eg.eclass_map[id].nodes
-    for node in nodes
-        matched |= match(eg, node, pat, subst)
+# Una e-clase coincide si alguno de sus nodos coincide
+function match(eg::Egraph, id::EclassId, pat::Pattern, subst::Substitution)
+    Channel() do c
+        nodes = eg.eclass_map[id].nodes
+        for node in nodes
+            for subst in match(eg, node, pat, subst)
+                put!(c, subst)
+            end
+        end
     end
-    return matched
 end
 
-function match(eg::Egraph, node::Enode, pat::Pattern, subst)
-    len = length(pat.args)
-    if len == 0
-        # @info "Pattern variable"
-        var = pat.head
-        if haskey(subst, var)
-            # variable is already in Substitution, check if compatible
-            if subst[var] == node
-                # @info "Found match" var => node
-                return true
+# Un e-nodo coincide si su cabeza coincide y _todo_ de sus hijos coinciden
+function match(eg::Egraph, node::Enode, pat::Pattern, subst::Substitution)
+    Channel() do c
+        len = length(pat.args)
+        if len == 0
+            var = pat.head
+            if haskey(subst, var)
+                if subst[var] == node
+                    put!(c, subst)
+                end
             else
-                # @info "incompatible match" var => node
-                return false
+                new_subst = copy(subst)
+                new_subst[var] = node
+                put!(c, new_subst)
             end
+        elseif node.head == pat.head && len == length(node.args)
+            for new_subst in match_list(eg, node.args, pat.args, subst)
+                put!(c, new_subst)
+            end
+        end
+    end
+end
+
+function match_list(eg::Egraph, ids::Vector{EclassId}, patterns::Vector{Pattern}, subst::Substitution)
+    Channel() do c
+        if length(patterns) == 0
+            put!(c, subst)
         else
-            subst[var] = node
-            # @info "Found match" var => node
-            return true
-        end
-    elseif node.head == pat.head && len == length(node.args)
-        # @info "Pattern expression"
-        for (child, sub_pat) in zip(node.args, pat.args)
-            if match(eg, child, sub_pat, subst)
-                continue
-            else
-                return false
+            for subst1 in match(eg, ids[1], patterns[1], subst)
+                for subst2 in match_list(eg, ids[2:end], patterns[2:end], subst1)
+                    put!(c, subst2)
+                end
             end
         end
-        # @info "Found match" pat.head => node
-        return true
-    else
-        return false
     end
 end

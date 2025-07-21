@@ -7,12 +7,11 @@ using Egraphs: add!, Pattern, Substitution, match, search
 @testset "match patterns / unconditional" begin
     eg = Egraph()
     a = add!(eg, Enode(:a))
+
     p = Pattern(:x)
-    subst = Substitution()
-    matched = match(eg, a, p, subst)
-    @info "test: valid Substitution" subst
-    @test subst == Dict(:x => Enode(:a))
-    @test matched
+    subst = first(match(eg, a, p, Substitution()))
+
+    @test subst == Substitution(:x => Enode(:a))
 end
 
 @testset "match patterns / single var, single pattern var" begin
@@ -21,10 +20,9 @@ end
     f = add!(eg, Enode(:f, [a, a]))
 
     p = Pattern(:f, [Pattern(:x), Pattern(:x)])
-    subst = Substitution()
-    matched = match(eg, f, p, subst)
-    @info "test: valid Substitution" subst
-    @test matched
+    subst = first(match(eg, f, p, Substitution()))
+
+    @test subst == Substitution(:x => Enode(:a))
 end
 
 @testset "match patterns / single var, multiple pattern vars" begin
@@ -33,11 +31,11 @@ end
     f = add!(eg, Enode(:f, [a, a]))
 
     p = Pattern(:f, [Pattern(:x), Pattern(:y)])
-    subst = Substitution()
-    matched = match(eg, f, p, subst)
-    @info "test: valid Substitution" subst
-    @test matched
+    subst = first(match(eg, f, p, Substitution()))
+
+    @test subst == Substitution(:x => Enode(:a), :y => Enode(:a))
 end
+
 
 @testset "match patterns / multiple var, multiple pattern vars" begin
     eg = Egraph()
@@ -46,10 +44,24 @@ end
     f = add!(eg, Enode(:f, [a, b]))
 
     p = Pattern(:f, [Pattern(:x), Pattern(:y)])
-    subst = Substitution()
-    matched = match(eg, f, p, subst)
-    @info "test: valid Substitution" subst
-    @test matched
+    subst = first(match(eg, f, p, Substitution()))
+
+    @test subst == Substitution(:x => Enode(:a), :y => Enode(:b))
+end
+
+@testset "match patterns / multiple nodes per e-class" begin
+    eg = Egraph()
+    a = add!(eg, Enode(:a))
+    b = add!(eg, Enode(:b))
+    f = add!(eg, Enode(:f, [a]))
+    merge!(eg, a, b)
+
+    p = Pattern(:f, [Pattern(:x)])
+    substs = collect(match(eg, f, p, Substitution()))
+
+    @test length(substs) == 2
+    @test Substitution(:x => Enode(:a)) in substs
+    @test Substitution(:x => Enode(:b)) in substs
 end
 
 @testset "search patterns" begin
@@ -60,27 +72,27 @@ end
     g = add!(eg, Enode(:g, [f, b]))
 
     p = Pattern(:f, [Pattern(:x), Pattern(:x)])
-    matched = false
-    for subst in search(eg, g, p)
-        matched = true
-        @info "test: valid Substitution" subst
-    end
-    @test matched
+    substs = collect(search(eg, g, p))
+
+    @info substs
+
+    @test length(substs) == 1
+    @test Substitution(:x => Enode(:a)) in substs
 end
 
-@testset "search patterns / multiple matches" begin
+@testset "search patterns / multiple var matches" begin
     eg = Egraph()
     a = add!(eg, Enode(:a))
     b = add!(eg, Enode(:b))
     f = add!(eg, Enode(:f, [a, b]))
 
     p = Pattern(:x)
-    matched = false
-    for subst in search(eg, f, p)
-        matched = true
-        @info "test: valid Substitution" subst
-    end
-    @test matched
+    substs = collect(search(eg, f, p))
+
+    @test length(substs) == 3
+    @test Substitution(:x =>  Enode(:f, [a, b])) in substs
+    @test Substitution(:x => Enode(:a)) in substs
+    @test Substitution(:x => Enode(:b)) in substs
 end
 
-end
+end # TestMatch
