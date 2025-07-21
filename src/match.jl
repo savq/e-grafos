@@ -8,27 +8,33 @@ Pattern(head) = Pattern(head, [])
 const Substitution = Dict{Symbol, Enode}
 
 
+# Return a channel that yields valid substitutions
 function search(eg::Egraph, id::EclassId, pat::Pattern)
-    found = false
-    nodes = eg.eclass_map[id].nodes
-    for node in nodes
-        found |= search(eg, node, pat)
+    Channel() do c
+        nodes = eg.eclass_map[id].nodes
+        for node in nodes
+            for subst in search(eg, node, pat)
+                put!(c, subst)
+            end
+        end
     end
-    return found
 end
 
+# Return a channel that yields valid substitutions
 function search(eg::Egraph, node::Enode, pat::Pattern)
-    subst = Substitution()
-    found = match(eg, node, pat, subst)
-    if found
-        @info "valid Substitution" subst
-    end
+    Channel() do c
+        subst = Substitution()
+        if match(eg, node, pat, subst)
+            put!(c, subst)
+        end
 
-    # Look for match in child e-classes
-    for child in node.args
-        found |= search(eg, child, pat)
+        # Look for match in child e-classes
+        for child in node.args
+            for subst in search(eg, child, pat)
+                put!(c, subst)
+            end
+        end
     end
-    return found
 end
 
 function match(eg::Egraph, id::EclassId, pat::Pattern, subst)

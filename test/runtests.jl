@@ -1,4 +1,3 @@
+include("./unionfind.jl")
 include("./egraph.jl")
-
-# include("./unionfind.jl")
-# include("./hashcons.jl")
+include("./match.jl")
