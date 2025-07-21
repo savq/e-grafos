@@ -3,8 +3,10 @@ const EclassId = UInt32
 
 struct Enode
     head::Symbol
-    args::Vector{UInt32}
+    args::Vector{EclassId}
 end
+
+Enode(head) = Enode(head, [])
 
 function Base.:(==)(a::Enode, b::Enode)
     return (a.head == b.head) && (a.args == b.args)
