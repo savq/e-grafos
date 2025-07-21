@@ -18,4 +18,6 @@ using .EgraphsCore: Egraph, Enode, add!, merge!, rebuild!
 include("./match.jl")
 include("./rewrite.jl")
 
+include("./dsl.jl")
+
 end # module Egraphs

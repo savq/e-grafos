@@ -55,6 +55,8 @@ mutable struct Egraph
     Egraph() = new(UnionFind{EclassId}(), Dict(), Dict(), [], create_id_generator())
 end
 
+Base.Broadcast.broadcastable(eg::Egraph) = Ref(eg)
+
 function UnionFinds.find!(eg::Egraph, id::EclassId)::EclassId
     return find!(eg.union_find, id)
 end
