@@ -1,4 +1,4 @@
-module TestEgraphs
+module TestEgraphsCore
 
 using Test
 using Egraphs: Egraph, Enode
@@ -79,4 +79,4 @@ end
     @test eg.eclass_map[find!(eg, id_a)].parents == eg.eclass_map[find!(eg, id_b)].parents
 end
 
-end # TestEgraphs
+end # module TestEgraphsCore

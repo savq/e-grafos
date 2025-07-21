@@ -1,8 +1,8 @@
-module TestMatch
+module TestEmatching
 
 using Test
-using Egraphs: Egraph, Enode
-using Egraphs: add!, Pattern, Substitution, match, search
+using Egraphs: Egraph, Enode, add!
+using Egraphs.Ematching: Pattern, Substitution, match, search
 
 @testset "match patterns / unconditional" begin
     eg = Egraph()
@@ -74,8 +74,6 @@ end
     p = Pattern(:f, [Pattern(:x), Pattern(:x)])
     substs = collect(search(eg, g, p))
 
-    @info substs
-
     @test length(substs) == 1
     @test Substitution(:x => Enode(:a)) in substs
 end
@@ -95,4 +93,4 @@ end
     @test Substitution(:x => Enode(:b)) in substs
 end
 
-end # TestMatch
+end # module TestEmatching

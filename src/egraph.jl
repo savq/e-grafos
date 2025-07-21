@@ -1,3 +1,7 @@
+module EgraphsCore
+
+using ..UnionFinds: UnionFinds, UnionFind, make_set!, find!
+
 const EclassId = UInt32
 
 
@@ -31,7 +35,7 @@ mutable struct Eclass
 end
 
 
-function _create_id_generator()
+function create_id_generator()
     return Channel{EclassId}() do c
         x = zero(EclassId)
         while true
@@ -48,10 +52,10 @@ mutable struct Egraph
     worklist::Vector{EclassId}
     id_generator::Channel
 
-    Egraph() = new(UnionFind{EclassId}(), Dict(), Dict(), [], _create_id_generator())
+    Egraph() = new(UnionFind{EclassId}(), Dict(), Dict(), [], create_id_generator())
 end
 
-function find!(eg::Egraph, id::EclassId)::EclassId
+function UnionFinds.find!(eg::Egraph, id::EclassId)::EclassId
     return find!(eg.union_find, id)
 end
 
@@ -167,3 +171,5 @@ function rebuild!(eg::Egraph)
         end
     end
 end
+
+end # module EgraphsCore

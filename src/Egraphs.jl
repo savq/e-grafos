@@ -1,8 +1,20 @@
 module Egraphs
 
+public
+    Egraph,
+    Enode,
+    add!,
+    find!,
+    merge!,
+    rebuild!
+
+
 include("./unionfind.jl")
-# include("./hashcons.jl")
+using .UnionFinds: find!
+
 include("./egraph.jl")
+using .EgraphsCore: Egraph, Enode, add!, merge!, rebuild!
+
 include("./match.jl")
 
 end # module Egraphs

@@ -1,3 +1,7 @@
+module Ematching
+
+using ..EgraphsCore: Egraph, EclassId, Enode
+
 struct Pattern
     head::Symbol
     args::Vector{Pattern}
@@ -84,3 +88,5 @@ function match_list(eg::Egraph, ids::Vector{EclassId}, patterns::Vector{Pattern}
         end
     end
 end
+
+end # module Ematching
