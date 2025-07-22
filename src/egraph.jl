@@ -4,19 +4,26 @@ using ..UnionFinds: UnionFinds, UnionFind, make_set!, find!
 
 const EclassId = UInt32
 
+abstract type Enode end
 
-struct Enode
+struct ConstTerm <: Enode
+    val::Union{Symbol, Int}
+end
+
+struct VarTerm <: Enode
+    head::Symbol
+end
+
+struct FuncTerm <: Enode
     head::Symbol
     args::Vector{EclassId}
 end
 
-Enode(head) = Enode(head, [])
-
-function Base.:(==)(a::Enode, b::Enode)
+function Base.:(==)(a::FuncTerm, b::FuncTerm)
     return (a.head == b.head) && (a.args == b.args)
 end
 
-function Base.hash(node::Enode, h::UInt)
+function Base.hash(node::FuncTerm, h::UInt)
     h = hash(node.head, h)
     for arg in node.args
         h = hash.(arg, h)
@@ -24,9 +31,9 @@ function Base.hash(node::Enode, h::UInt)
     return h
 end
 
-function Base.show(io::IO, node::Enode)
-    print(io, "⸨", node.head, isempty(node.args) ? "" : (" " * join(node.args, " ")), "⸩")
-end
+Base.show(io::IO, node::ConstTerm) = print(io, "⸨", node.val, "⸩")
+Base.show(io::IO, node::VarTerm) = print(io, "⸨", node.head, "⸩")
+Base.show(io::IO, node::FuncTerm) = print(io, "⸨", node.head, (" " * join(node.args, " ")), "⸩")
 
 
 mutable struct Eclass
@@ -61,9 +68,10 @@ function UnionFinds.find!(eg::Egraph, id::EclassId)::EclassId
     return find!(eg.union_find, id)
 end
 
-function canonicalize(eg::Egraph, node::Enode)
-    return Enode(node.head, map(arg -> find!(eg, arg), node.args))
-end
+canonicalize(eg::Egraph, node::ConstTerm) = node
+canonicalize(eg::Egraph, node::VarTerm) = node
+canonicalize(eg::Egraph, node::FuncTerm) = FuncTerm(node.head, map(arg -> find!(eg, arg), node.args))
+
 
 function add!(eg::Egraph, node::Enode)::EclassId
     node = canonicalize(eg, node)
@@ -79,8 +87,10 @@ function add!(eg::Egraph, node::Enode)::EclassId
         ## Update eclass_map
         eg.eclass_map[new_id] = Eclass(Set([node]), Dict())
 
-        for arg in node.args
-            eg.eclass_map[arg].parents[node] = new_id
+        if node isa FuncTerm
+            for arg in node.args
+                eg.eclass_map[arg].parents[node] = new_id
+            end
         end
 
         ## Update hashcons
@@ -113,8 +123,10 @@ function Base.merge!(eg::Egraph, id1::EclassId, id2::EclassId)::EclassId
             push!(eg.eclass_map[new_id].nodes, node)
 
             # Update children
-            for arg in node.args
-                eg.eclass_map[arg].parents[node] = new_id
+            if node isa FuncTerm
+                for arg in node.args
+                    eg.eclass_map[arg].parents[node] = new_id
+                end
             end
         end
 

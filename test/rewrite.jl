@@ -1,19 +1,21 @@
 module TestRewriting
 
 using Test
-using Egraphs: Egraph, Enode, add!, merge!, find!
-using Egraphs.Ematching: Pattern, Substitution, search
+using Egraphs: Egraph, ConstTerm, VarTerm, FuncTerm
+using Egraphs: add!, merge!, find!
+using Egraphs.Ematching: Substitution, ConstPattern, VarPattern, FuncPattern
+using Egraphs.Ematching: search
 using Egraphs.Rewriting: RewriteRule, rewrite!, equality_saturation
 
 @testset "rewrite / identity" begin
     eg = Egraph()
-    a = add!(eg, Enode(:a))
-    id = add!(eg, Enode(:id, [a]))
-    id2 = add!(eg, Enode(:id, [id]))
+    a = add!(eg, VarTerm(:a))
+    id = add!(eg, FuncTerm(:id, [a]))
+    id2 = add!(eg, FuncTerm(:id, [id]))
 
     rr = RewriteRule(
-        Pattern(:id, [Pattern(:x)]),
-        Pattern(:x)
+        FuncPattern(:id, [VarPattern(:x)]),
+        VarPattern(:x)
     )
 
     rewrite!(eg, id2, rr)
@@ -22,27 +24,42 @@ end
 
 @testset "rewrite / symmetry" begin
     eg = Egraph()
-    a = add!(eg, Enode(:a))
-    b = add!(eg, Enode(:b))
-    d = add!(eg, Enode(:d, [a, b]))
+    a = add!(eg, VarTerm(:a))
+    b = add!(eg, VarTerm(:b))
+    d = add!(eg, FuncTerm(:d, [a, b]))
 
     rr = RewriteRule(
-        Pattern(:d, [Pattern(:x), Pattern(:y)]),
-        Pattern(:d, [Pattern(:y), Pattern(:x)]),
+        FuncPattern(:d, [VarPattern(:x), VarPattern(:y)]),
+        FuncPattern(:d, [VarPattern(:y), VarPattern(:x)]),
     )
 
     rewrite!(eg, d, rr)
-    @test find!(eg, d) == find!(eg, add!(eg, Enode(:d, [b, a])))
+    @test find!(eg, d) == find!(eg, add!(eg, FuncTerm(:d, [b, a])))
+end
+
+@testset "rewrite / zero" begin
+    eg = Egraph()
+    a = add!(eg, VarTerm(:a))
+    z = add!(eg, ConstTerm(0))
+    sum = add!(eg, FuncTerm(:+, [a, z]))
+
+    rr = RewriteRule(
+        FuncPattern(:+, [VarPattern(:x), ConstPattern(0)]),
+        VarPattern(:x),
+    )
+
+    rewrite!(eg, sum, rr)
+    @test find!(eg, sum) == find!(eg, a)
 end
 
 @testset "rewrite / check saturation" begin
     eg = Egraph()
-    a = add!(eg, Enode(:a))
-    id = add!(eg, Enode(:id, [a]))
+    a = add!(eg, VarTerm(:a))
+    id = add!(eg, FuncTerm(:id, [a]))
 
     rr = RewriteRule(
-        Pattern(:id, [Pattern(:x)]),
-        Pattern(:x)
+        FuncPattern(:id, [VarPattern(:x)]),
+        VarPattern(:x)
     )
 
     saturated = rewrite!(eg, id, rr)
@@ -54,16 +71,32 @@ end
 
 @testset "equality saturation" begin
     eg = Egraph()
-    a = add!(eg, Enode(:a))
-    id = add!(eg, Enode(:id, [a]))
-    id2 = add!(eg, Enode(:id, [id]))
+    a = add!(eg, VarTerm(:a))
+    id = add!(eg, FuncTerm(:id, [a]))
+    id2 = add!(eg, FuncTerm(:id, [id]))
 
     rr = RewriteRule(
-        Pattern(:id, [Pattern(:x)]),
-        Pattern(:x)
+        FuncPattern(:id, [VarPattern(:x)]),
+        VarPattern(:x)
     )
 
     result = equality_saturation(eg, id2, [rr])
+    @test result == :a
+end
+
+@testset "equality saturation / constants" begin
+    eg = Egraph()
+    a = add!(eg, VarTerm(:a))
+    zt = add!(eg, ConstTerm(0))
+    sum = add!(eg, FuncTerm(:+, [a, zt]))
+    sum2 = add!(eg, FuncTerm(:+, [sum, zt]))
+
+    rr = RewriteRule(
+        FuncPattern(:+, [VarPattern(:x), ConstPattern(0)]),
+        VarPattern(:x)
+    )
+
+    result = equality_saturation(eg, sum2, [rr])
     @test result == :a
 end
 

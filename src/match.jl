@@ -1,15 +1,23 @@
 module Ematching
 
-using ..EgraphsCore: Egraph, EclassId, Enode
+using ..EgraphsCore: Egraph, EclassId, Enode, ConstTerm, VarTerm, FuncTerm
 
-struct Pattern
+abstract type Pattern end
+
+struct ConstPattern <: Pattern
+    val::Union{Symbol, Int}
+end
+
+struct VarPattern <: Pattern
+    head::Symbol
+end
+
+struct FuncPattern <: Pattern
     head::Symbol
     args::Vector{Pattern}
 end
 
-Pattern(head) = Pattern(head, [])
-
-const Substitution = Dict{Symbol, Enode}
+const Substitution = Dict{VarPattern, Enode}
 
 
 # Return a channel that yields valid substitutions
@@ -24,8 +32,15 @@ function search(eg::Egraph, id::EclassId, pat::Pattern)
     end
 end
 
-# Return a channel that yields valid substitutions
 function search(eg::Egraph, node::Enode, pat::Pattern)
+    Channel() do c
+        for subst in match(eg, node, pat, Substitution())
+            put!(c, subst)
+        end
+    end
+end
+
+function search(eg::Egraph, node::FuncTerm, pat::Pattern)
     Channel() do c
         for subst in match(eg, node, pat, Substitution())
             put!(c, subst)
@@ -52,25 +67,42 @@ function match(eg::Egraph, id::EclassId, pat::Pattern, subst::Substitution)
     end
 end
 
-# Un e-nodo coincide si su cabeza coincide y _todo_ de sus hijos coinciden
-function match(eg::Egraph, node::Enode, pat::Pattern, subst::Substitution)
+# Por defecto, no hay match.
+function match(eg::Egraph, id::Enode, pat::Pattern, subst::Substitution)
+    return Channel(identity)
+end
+
+# Los patrones variables hacen match incondicionalmente.
+function match(eg::Egraph, node::Enode, var_pat::VarPattern, subst::Substitution)
     Channel() do c
-        len = length(pat.args)
-        if len == 0
-            var = pat.head
-            if haskey(subst, var)
-                if subst[var] == node
-                    put!(c, subst)
-                end
-            else
-                new_subst = copy(subst)
-                new_subst[var] = node
-                put!(c, new_subst)
+        if haskey(subst, var_pat)
+            if subst[var_pat] == node
+                put!(c, subst)
             end
-        elseif node.head == pat.head && len == length(node.args)
+        else
+            new_subst = copy(subst)
+            new_subst[var_pat] = node
+            put!(c, new_subst)
+        end
+    end
+end
+
+# Las funciones hacen match si sus cabezas coinciden y _todos_ sus argumentos coinciden.
+function match(eg::Egraph, node::FuncTerm, pat::FuncPattern, subst::Substitution)
+    Channel() do c
+        if node.head == pat.head && length(pat.args) == length(node.args)
             for new_subst in match_list(eg, node.args, pat.args, subst)
                 put!(c, new_subst)
             end
+        end
+    end
+end
+
+# Las constantes hacen match si sus valores son iguales.
+function match(eg::Egraph, node::ConstTerm, pat::ConstPattern, subst::Substitution)
+    Channel() do c
+        if node.val == pat.val
+            put!(c, subst)
         end
     end
 end

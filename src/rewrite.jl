@@ -1,20 +1,26 @@
 module Rewriting
 
-using ..EgraphsCore: Egraph, EclassId, Enode
+using ..EgraphsCore: Egraph, EclassId, ConstTerm, VarTerm, FuncTerm
 using ..EgraphsCore: add!, merge!, find!, rebuild!
-using ..Ematching: Pattern, search
+using ..Ematching: Pattern, ConstPattern, VarPattern, FuncPattern
+using ..Ematching: search
 
 struct RewriteRule
     lhs::Pattern
     rhs::Pattern
 end
 
-function instantiate(eg::Egraph, pat::Pattern, subst)
-    if length(pat.args) == 0
-        add!(eg, subst[pat.head])
-    else
-        add!(eg, Enode(pat.head, [instantiate(eg, sub_pat, subst) for sub_pat in pat.args]))
-    end
+
+function instantiate(eg::Egraph, pat::ConstPattern, subst)
+    add!(eg, ConstTerm(pat.val))
+end
+
+function instantiate(eg::Egraph, pat::VarPattern, subst)
+    add!(eg, subst[pat])
+end
+
+function instantiate(eg::Egraph, pat::FuncPattern, subst)
+    add!(eg, FuncTerm(pat.head, [instantiate(eg, sub_pat, subst) for sub_pat in pat.args]))
 end
 
 # Given a rewrite rule, find instances of LHS, instantiate and merge
@@ -42,22 +48,31 @@ function rewrite!(eg::Egraph, id::EclassId, rule::RewriteRule)
 end
 
 
-# Return the cost of an e-node
-function extract(eg::Egraph, node::Enode)
-    cost = 1
-    if isempty(node.args)
-        return (cost, node.head)
+# El costo de constantes y variables es 1
+function extract(eg::Egraph, node::VarTerm)
+    return (1, node.head)
+end
+
+function extract(eg::Egraph, node::ConstTerm)
+    if node.val isa Symbol
+        return (1, QuoteNode(node.val))
     else
-        expr = []
-        for (c, sub_expr) in extract.(eg, node.args)
-            cost += c
-            push!(expr, sub_expr)
-        end
-        return cost, Expr(:call, expr)
+        return (1, node.val)
     end
 end
 
-# Return the enode with the lowest cost in e-class
+# El costo de una función es 1 + el costo de sus argumentos
+function extract(eg::Egraph, node::FuncTerm)
+    cost = 1
+    expr = []
+    for (c, sub_expr) in extract.(eg, node.args)
+        cost += c
+        push!(expr, sub_expr)
+    end
+    return cost, Expr(:call, node.head, expr...)
+end
+
+# Return the e-node with the lowest cost in e-class
 function extract(eg::Egraph, id::EclassId)
     nodes = eg.eclass_map[id].nodes
     local optimal_cost = Inf
