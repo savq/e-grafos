@@ -1,7 +1,7 @@
 module TestUnionFinds
 
 using Test
-using Egraphs.UnionFinds: UnionFind, make_set!, find!
+using Egraphs: UnionFind, make_set!, find!
 
 @testset "Test UnionFind" begin
     u = UnionFind{Char}(Dict(), Dict())

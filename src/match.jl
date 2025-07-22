@@ -1,7 +1,3 @@
-module Ematching
-
-using ..EgraphsCore: Egraph, EclassId, Enode, ConstTerm, VarTerm, FuncTerm
-
 abstract type Pattern end
 
 struct ConstPattern <: Pattern
@@ -120,5 +116,3 @@ function match_list(eg::Egraph, ids::Vector{EclassId}, patterns::Vector{Pattern}
         end
     end
 end
-
-end # module Ematching

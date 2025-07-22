@@ -1,10 +1,3 @@
-module Rewriting
-
-using ..EgraphsCore: Egraph, EclassId, ConstTerm, VarTerm, FuncTerm
-using ..EgraphsCore: add!, merge!, find!, rebuild!
-using ..Ematching: Pattern, ConstPattern, VarPattern, FuncPattern
-using ..Ematching: search
-
 struct RewriteRule
     lhs::Pattern
     rhs::Pattern
@@ -86,7 +79,7 @@ function extract(eg::Egraph, id::EclassId)
     return optimal_cost, optimal_expr
 end
 
-function equality_saturation(eg::Egraph, id::EclassId, rewrites::Vector{RewriteRule}; timeout=100)
+function eqsaturate!(eg::Egraph, id::EclassId, rewrites::Vector{RewriteRule}; timeout=100)
     saturated = false
     while !saturated && timeout > 0
         for rule in rewrites
@@ -98,5 +91,3 @@ function equality_saturation(eg::Egraph, id::EclassId, rewrites::Vector{RewriteR
     cost, expr = extract(eg, id)
     return expr
 end
-
-end # module Rewriting

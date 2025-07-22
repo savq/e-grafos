@@ -1,10 +1,8 @@
 module TestEmatching
 
 using Test
-using Egraphs: Egraph, ConstTerm, VarTerm, FuncTerm
-using Egraphs: add!
-using Egraphs.Ematching: Substitution, ConstPattern, VarPattern, FuncPattern, match, search
-using Egraphs.Ematching: match, search
+using Egraphs: Egraph, ConstTerm, VarTerm, FuncTerm, ConstPattern, VarPattern, FuncPattern, Substitution
+using Egraphs: add!, match, search
 
 @testset "matching / unconditional" begin
     eg = Egraph()

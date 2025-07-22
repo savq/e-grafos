@@ -1,10 +1,9 @@
 module TestDSL
 
 using Test
-using Egraphs: Egraph, ConstTerm, VarTerm, FuncTerm
-using Egraphs: add!, find!
-using Egraphs.DSL: @add, @rule
-using Egraphs.Rewriting: RewriteRule, rewrite!
+using Egraphs: Egraph, ConstTerm, VarTerm, FuncTerm, RewriteRule
+using Egraphs: add!, find!, rewrite!
+using Egraphs: @add, @rule
 
 @testset "DSL / constant symbols" begin
     eg = Egraph()

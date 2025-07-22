@@ -1,10 +1,3 @@
-module DSL
-
-using ..EgraphsCore: Egraph, ConstTerm, VarTerm, FuncTerm, add!
-using ..EgraphsCore: add!
-using ..Ematching: ConstPattern, VarPattern, FuncPattern
-using ..Rewriting: RewriteRule
-
 pattern_from_expr(n::Int) = ConstPattern(n)
 pattern_from_expr(qn::QuoteNode) = ConstPattern(qn.value)
 pattern_from_expr(sym::Symbol) = VarPattern(sym)
@@ -45,5 +38,3 @@ end
 macro add(eg::Symbol, expr)
     :(enode_from_expr($(esc(eg)), $(QuoteNode(expr))))
 end
-
-end # module DSL

@@ -2,28 +2,31 @@ module Egraphs
 
 public
     Egraph,
+    EclassId,
     Enode,
     ConstTerm,
     VarTerm,
-    FuncTerm
+    FuncTerm,
+    ConstPattern,
+    VarPattern,
+    FuncPattern
 
 public
     add!,
     find!,
     merge!,
-    rebuild!
+    rebuild!,
+    search,
+    match,
+    extract,
+    rewrite!,
+    eqsaturate!
 
 
 include("./unionfind.jl")
-using .UnionFinds: find!
-
 include("./egraph.jl")
-using .EgraphsCore: Egraph, Enode, ConstTerm, VarTerm, FuncTerm
-using .EgraphsCore: add!, merge!, rebuild!
-
 include("./match.jl")
 include("./rewrite.jl")
-
 include("./dsl.jl")
 
 end # module Egraphs

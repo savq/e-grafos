@@ -1,11 +1,8 @@
 module TestRewriting
 
 using Test
-using Egraphs: Egraph, ConstTerm, VarTerm, FuncTerm
-using Egraphs: add!, merge!, find!
-using Egraphs.Ematching: Substitution, ConstPattern, VarPattern, FuncPattern
-using Egraphs.Ematching: search
-using Egraphs.Rewriting: RewriteRule, rewrite!, equality_saturation
+using Egraphs: Egraph, ConstTerm, VarTerm, FuncTerm, ConstPattern, VarPattern, FuncPattern, Substitution, RewriteRule
+using Egraphs: add!, merge!, find!, search, rewrite!, eqsaturate!
 
 @testset "rewrite / identity" begin
     eg = Egraph()
@@ -80,7 +77,7 @@ end
         VarPattern(:x)
     )
 
-    result = equality_saturation(eg, id2, [rr])
+    result = eqsaturate!(eg, id2, [rr])
     @test result == :a
 end
 
@@ -96,7 +93,7 @@ end
         VarPattern(:x)
     )
 
-    result = equality_saturation(eg, sum2, [rr])
+    result = eqsaturate!(eg, sum2, [rr])
     @test result == :a
 end
 

@@ -1,7 +1,3 @@
-module EgraphsCore
-
-using ..UnionFinds: UnionFinds, UnionFind, make_set!, find!
-
 const EclassId = UInt32
 
 abstract type Enode end
@@ -64,7 +60,7 @@ end
 
 Base.Broadcast.broadcastable(eg::Egraph) = Ref(eg)
 
-function UnionFinds.find!(eg::Egraph, id::EclassId)::EclassId
+function find!(eg::Egraph, id::EclassId)::EclassId
     return find!(eg.union_find, id)
 end
 
@@ -185,5 +181,3 @@ function rebuild!(eg::Egraph)
         end
     end
 end
-
-end # module EgraphsCore

@@ -1,5 +1,3 @@
-module UnionFinds
-
 struct UnionFind{T}
     parents::Dict{T, T}
     ranks::Dict{T, Int} # The number of direct children of a node
@@ -51,5 +49,3 @@ function Base.union!(u::UnionFind{T}, a::T, b::T) where {T}
         return root_a
     end
 end
-
-end # module UnionFinds
