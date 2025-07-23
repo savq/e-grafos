@@ -129,13 +129,9 @@ function Base.merge!(eg::Egraph, id1::EclassId, id2::EclassId)::EclassId
         # Update parents
         for (p_node, p_class_id) in eg.eclass_map[old_id].parents
             eg.eclass_map[new_id].parents[p_node] = find!(eg, p_class_id)
-        end
 
-        ## Update hashcons
-        for node in eg.eclass_map[new_id].nodes
-            delete!(eg.hashcons, node)
-            node = canonicalize(eg, node)
-            eg.hashcons[node] = new_id
+            delete!(eg.eclass_map[p_class_id].nodes, p_node)
+            push!(eg.eclass_map[p_class_id].nodes, canonicalize(eg, p_node))
         end
 
         ## Remove old e-class and mark new e-class as stale

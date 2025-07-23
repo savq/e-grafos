@@ -20,7 +20,9 @@ public
     match,
     extract,
     rewrite!,
-    eqsaturate!
+    eqsaturate!,
+    @add,
+    @rule
 
 
 include("./unionfind.jl")

@@ -29,8 +29,11 @@ function rewrite!(eg::Egraph, id::EclassId, rule::RewriteRule)
     for (rule, subst) in matches
         l = instantiate(eg, rule.lhs, subst)
         r = instantiate(eg, rule.rhs, subst)
-        did_merge |= find!(eg, l) != find!(eg, r)
-        merge!(eg, l, r)
+        if find!(eg, l) != find!(eg, r)
+            # @info "Substitution" rule subst l r
+            did_merge |= true
+            merge!(eg, l, r)
+        end
     end
 
     did_rebuild = !isempty(eg.worklist)
@@ -66,12 +69,12 @@ function extract(eg::Egraph, node::FuncTerm)
 end
 
 # Return the e-node with the lowest cost in e-class
+# TODO: Avoid infinite loops
 function extract(eg::Egraph, id::EclassId)
     nodes = eg.eclass_map[id].nodes
     local optimal_cost = Inf
     local optimal_expr
-    for node in nodes
-        (cost, expr) = extract(eg, node)
+    for (cost, expr) in extract.(eg, nodes)
         if cost < optimal_cost
             optimal_cost, optimal_expr = cost, expr
         end
@@ -86,8 +89,6 @@ function eqsaturate!(eg::Egraph, id::EclassId, rewrites::Vector{RewriteRule}; ti
             saturated = rewrite!(eg, id, rule)
         end
         timeout -= 1
+        # @info "timeout" timeout
     end
-
-    cost, expr = extract(eg, id)
-    return expr
 end

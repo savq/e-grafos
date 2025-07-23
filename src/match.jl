@@ -13,22 +13,31 @@ struct FuncPattern <: Pattern
     args::Vector{Pattern}
 end
 
+Base.show(io::IO, node::ConstPattern) = print(io, "⟦:", node.val, "⟧")
+Base.show(io::IO, node::VarPattern) = print(io, "⟦", node.head, "⟧")
+Base.show(io::IO, node::FuncPattern) = print(io, "⟦", node.head, (" " * join(node.args, " ")), "⟧")
+
 const Substitution = Dict{VarPattern, Enode}
 
 
 # Return a channel that yields valid substitutions
-function search(eg::Egraph, id::EclassId, pat::Pattern)
+function search(eg::Egraph, id::EclassId, pat::Pattern, visited=[])
     Channel() do c
-        nodes = eg.eclass_map[id].nodes
-        for node in nodes
-            for subst in search(eg, node, pat)
-                put!(c, subst)
+        if id in visited
+            return
+        else
+            push!(visited, id)
+            nodes = eg.eclass_map[id].nodes
+            for node in nodes
+                for subst in search(eg, node, pat, visited)
+                    put!(c, subst)
+                end
             end
         end
     end
 end
 
-function search(eg::Egraph, node::Enode, pat::Pattern)
+function search(eg::Egraph, node::Enode, pat::Pattern, _visited=[])
     Channel() do c
         for subst in match(eg, node, pat, Substitution())
             put!(c, subst)
@@ -36,7 +45,7 @@ function search(eg::Egraph, node::Enode, pat::Pattern)
     end
 end
 
-function search(eg::Egraph, node::FuncTerm, pat::Pattern)
+function search(eg::Egraph, node::FuncTerm, pat::Pattern, visited=[])
     Channel() do c
         for subst in match(eg, node, pat, Substitution())
             put!(c, subst)
@@ -44,7 +53,7 @@ function search(eg::Egraph, node::FuncTerm, pat::Pattern)
 
         # Look for match in child e-classes
         for child in node.args
-            for subst in search(eg, child, pat)
+            for subst in search(eg, child, pat, visited)
                 put!(c, subst)
             end
         end
