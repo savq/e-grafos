@@ -8,20 +8,20 @@ using Egraphs: @add, @rule
 @testset "Group theory" begin
     theory = [
         # associativity
-        @rule((x * y) * z --> x * (y * z)),
-        @rule(x * (y * z) --> (x * y) * z),
+        @rule (x * y) * z --> x * (y * z)
+        @rule x * (y * z) --> (x * y) * z
 
         # identity
-        @rule(x * :e --> x),
-        @rule(:e * x --> x),
+        @rule x * :e --> x
+        @rule :e * x --> x
 
         # inverses
-        @rule(x * inv(x) --> :e),
-        @rule(inv(x) * x --> :e),
-        @rule(inv(inv(x)) --> x),
+        @rule x * inv(x) --> :e
+        @rule inv(x) * x --> :e
+        @rule inv(inv(x)) --> x
 
         # commutativity
-        @rule(x * y --> y * x),
+        @rule x * y --> y * x
     ]
 
     eg = Egraph()
@@ -36,15 +36,15 @@ end
 
 @testset "Symbolic differentiation" begin
     theory = [
-        @rule(Dx(:x) --> 1)
-        @rule(Dx(y) --> 0)
+        @rule Dx(:x) --> 1
+        @rule Dx(y) --> 0
 
-        @rule(Dx(u + v) --> Dx(v + u))
-        @rule(Dx(u * v) --> u*Dx(v) + v*Dx(u))
+        @rule Dx(u + v) --> Dx(v + u)
+        @rule Dx(u * v) --> u*Dx(v) + v*Dx(u)
 
-        @rule(u + v --> v + u)
-        @rule(u * 1 --> u)
-        @rule(u + u --> 2 * u)
+        @rule u + v --> v + u
+        @rule u * 1 --> u
+        @rule u + u --> 2 * u
     ]
 
     eg = Egraph()
