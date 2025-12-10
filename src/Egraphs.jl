@@ -1,5 +1,7 @@
 module Egraphs
 
+# TODO: Fix recursive e-graphs.
+
 public
     Egraph,
     EclassId,

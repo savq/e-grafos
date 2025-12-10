@@ -29,10 +29,6 @@ TableOfContents()
 # ╔═╡ 25600dbc-30a0-495a-adbe-669e2e7bb436
 md"""
 # Introducción
-
-Un ejemplo de compiladores...
-
-![](./imgs/01.png)
 """
 
 # ╔═╡ 1726db1b-e0c4-4f74-8f42-d50011a3c247
@@ -54,8 +50,9 @@ md"""
 
 Posibles reglas
 ```
-x / x -> 1
-x * 2 -> x << 1
+(x * y) / z --> x * (y / z)
+x / x --> 1
+x * 2 --> x << 1
 ```
 """
 
@@ -98,7 +95,7 @@ LocalResource("./imgs/06.png")
 md"""
 # Definición de e-grafo
 
-Un e-grafo (abreviación de e-graph, o equality graph) es una estructura de datos usada para representar y manipular eficientemente igualdades entre expresiones.
+Un e-grafo (grafo de equivalencia) es una estructura de datos usada para representar y manipular eficientemente igualdades entre expresiones.
 
 Estructuralmente, un e-grafo es una tupla $E = (U, M, H)$ compuesta por
 
@@ -205,10 +202,10 @@ mutable struct Egraph
     union_find::UnionFind{EclassId}
     eclass_map::Dict{EclassId, Eclass}
     hashcons::Dict{Enode, EclassId}
-    
+
 	worklist::Vector{EclassId}
     id_generator::Channel
-	
+
     Egraph() = new(UnionFind{EclassId}(), Dict(), Dict(), [], create_id_generator())
 end
 
@@ -247,9 +244,6 @@ end
 md"""
 # Operaciones básicas
 """
-
-# ╔═╡ d7bfe56e-f7f6-47b2-812e-1b177326a29a
-md"el mismo find del union-find:"
 
 # ╔═╡ 68cccd6d-241b-4e9e-97a0-6078ebb50ee0
 function find!(eg::Egraph, id::EclassId)::EclassId
@@ -361,6 +355,11 @@ function Base.merge!(eg::Egraph, id1::EclassId, id2::EclassId)::EclassId
         return new_id
     end
 end
+
+# ╔═╡ 72bbf84a-14ca-4824-aa71-7cfbb742e44b
+md"""
+Congruencia: Si $a ≡ b$ entonces $f(a) ≡ f(b)$
+"""
 
 # ╔═╡ c01b62be-01ef-4272-aa7d-1ce0219f63ab
 function repair!(eg::Egraph, id::EclassId)
@@ -801,20 +800,24 @@ end
     ]
 
     eg = Egraph()
-    term = @add(eg, (a * b) * inv(a))
+    term = @add(eg, (a * b) * inv(a) * inv(b))
+
+	@info eg.eclass_map
 
     eqsaturate!(eg, term, theory)
     # @test extract(eg, term)[2] == :b
 
     rewrite!(eg, term, theory[3])
-    @test find!(eg, term) == find!(eg, @add eg b)
+	rewrite!(eg, term, theory[3])
+    # @test find!(eg, term) == find!(eg, @add eg :e)
+	# @test find!(eg, term) == find!(eg, @add eg :e)
 end
 
 # ╔═╡ 2350aa2c-954a-4262-9f04-7b019dcdd1b7
 md"""
 # Estado del arte
 
-- E-analisis: Reescritura usando computación arbitraria
+- E-análisis: Reescritura usando computación arbitraria
 
 
 - Proyectos usando e-grafos
@@ -824,6 +827,8 @@ md"""
   - [Metatheory.jl: symbolic computation](https://github.com/JuliaSymbolics/Metatheory.jl)
 
   - [Herbie: Accurate Floating Point Expressions.](https://herbie.uwplse.org/pldi15-paper.pdf)
+
+  - [egg](https://docs.rs/egg/latest/egg/)
 
   - Otros proyectos: [awesome-egraphs](https://github.com/philzook58/awesome-egraphs)
 
@@ -845,7 +850,7 @@ md"""
 4. Jean-Christophe Filliatre and Sylvain Conchon. 2006. Type-Safe Modular Hash-Consing. (2006).
 
 
-5. Pavel Panchekha, Alex Sachez-Stern, James R Wilcox, and Zachary Tatlock. Automatically Improving Accuracy for Floating Point Expressions. 
+5. Pavel Panchekha, Alex Sachez-Stern, James R Wilcox, and Zachary Tatlock. Automatically Improving Accuracy for Floating Point Expressions.
 
 
 6. Robert Endre Tarjan. 1975. Efficiency of a Good But Not Linear Set Union Algorithm. J. ACM 22, 2 (April 1975), 215–225. <https://doi.org/10.1145/321879.321884>
@@ -861,6 +866,9 @@ md"""
 
 
 10. Yihong Zhang, Yisu Remy Wang, Oliver Flatt, David Cao, Philip Zucker, Eli Rosenthal, Zachary Tatlock, and Max Willsey. 2023. Better Together: Unifying Datalog and Equality Saturation. <https://doi.org/10.48550/arXiv.2304.04332>
+
+
+11. Philip Zucker. 2020. E-Graph Pattern Matching (Part II). Retrieved July 23, 2025 from <https://www.philipzucker.com/egraph-2/>
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -1162,8 +1170,8 @@ version = "17.4.0+2"
 
 # ╔═╡ Cell order:
 # ╟─ebbb2300-6777-4edf-8918-a2b2e77f6f6f
-# ╠═304076bc-67a3-11f0-12df-e72a6c18dd45
-# ╠═f304d80f-c63e-453c-a915-805333d58da4
+# ╟─304076bc-67a3-11f0-12df-e72a6c18dd45
+# ╟─f304d80f-c63e-453c-a915-805333d58da4
 # ╟─25600dbc-30a0-495a-adbe-669e2e7bb436
 # ╟─1726db1b-e0c4-4f74-8f42-d50011a3c247
 # ╟─b6612ee0-532c-4ac0-bad7-840570189903
@@ -1191,36 +1199,36 @@ version = "17.4.0+2"
 # ╠═a2d86fcd-2e43-4cfe-8b07-2f35cef19ab0
 # ╠═4f129d1a-ef54-4401-bbfd-154232bd160a
 # ╠═0c44ce4e-b7f2-4475-9e84-0feabe435dd0
-# ╠═da2fc5f0-61fa-4781-8d82-cb768c7d9069
-# ╟─d7bfe56e-f7f6-47b2-812e-1b177326a29a
+# ╟─da2fc5f0-61fa-4781-8d82-cb768c7d9069
 # ╠═68cccd6d-241b-4e9e-97a0-6078ebb50ee0
 # ╟─ef7f67b5-3ac9-4ae0-9244-153295cd2115
 # ╠═ed61d76a-b1d6-4da3-943d-e89b5aae794c
 # ╠═6e7fe152-b33c-4bfb-a40c-8aacff6dcda5
 # ╠═873bf7ab-b89b-4612-bfc3-239104e4c39f
+# ╟─72bbf84a-14ca-4824-aa71-7cfbb742e44b
 # ╠═c01b62be-01ef-4272-aa7d-1ce0219f63ab
 # ╠═738dee24-8832-487c-9829-0cad5d07e07f
-# ╠═67ebe67d-7bc9-4cce-9ff2-a201244a339e
+# ╟─67ebe67d-7bc9-4cce-9ff2-a201244a339e
 # ╠═56eaa177-4bc5-4059-8a77-7dfb2ad5fe0e
 # ╠═cb88e815-35df-4609-9765-c86d7958f1ab
 # ╟─4a329c78-f2c3-478d-905b-361a0eed7e41
 # ╠═d02aca4e-1e23-43a4-8aa1-d34a30aceef2
 # ╟─d36c5db4-7075-4877-9a3b-a91fd2439a05
 # ╠═4919f618-3aba-4578-8c5c-0ec704da52ba
-# ╠═ca29a288-eaab-4509-b921-1ad5734b9b62
+# ╟─ca29a288-eaab-4509-b921-1ad5734b9b62
 # ╠═ef215ff3-ce3b-49d5-93d1-d286e21d2b75
 # ╠═8407540b-b34d-4dac-b803-ec45b55ee5da
 # ╠═bf233520-085f-4476-9b83-8c6ea8871348
 # ╟─d6259506-54e7-4489-a95e-eaed406b8f7a
 # ╠═c3bf915d-2a55-4e75-b402-ea9ad2e5f76d
-# ╠═6824acfa-c235-43db-9507-0320e9ceb172
+# ╟─6824acfa-c235-43db-9507-0320e9ceb172
 # ╠═02c02ef0-a54f-40ab-b41c-1d019b9fdff0
 # ╟─4f0449d7-e2c4-4e7e-a9b5-4d80a74c8326
 # ╠═81826354-a78f-441a-a079-b408e0108165
 # ╟─e3083285-e696-4de9-9e8a-90886c53c94e
 # ╠═96d706b9-ac4b-49f4-979d-aa586820aa2f
 # ╠═323fc6a4-2423-42f5-b4d5-d0976b59a9b9
-# ╠═2350aa2c-954a-4262-9f04-7b019dcdd1b7
+# ╟─2350aa2c-954a-4262-9f04-7b019dcdd1b7
 # ╟─85b01956-273f-4922-bf89-d9e350ece009
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
